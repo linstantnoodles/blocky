@@ -1,0 +1,5 @@
+env
+*.pickle
+*-credentials.json
+__pycache__
+
