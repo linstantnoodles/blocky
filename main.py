@@ -3,7 +3,6 @@ import gcal
 import datetime
 import pytz
 
-
 def schedule(events,from_datetime,to_datetime):
     print("Date: 8/29")
     print(from_datetime)
@@ -36,11 +35,16 @@ def today_remaining_range():
     bedtime = datetime.datetime(year=today.year, month=today.month, day=today.day, hour=22, second=0, tzinfo=pytz.timezone('America/New_York'))
     return (now, bedtime)
 
-def hours_remaining(range_start, range_end, events):
+def hours_remaining(range_start, range_end, events, unscheduled_blocks=[]):
+    print(f"Day end: {range_end}")
     total = range_end - range_start
     scheduled_blocks = [e['to'] - e['from'] for e in events]
     total_scheduled = sum(scheduled_blocks, datetime.timedelta())
-    print(total - total_scheduled)
+    print(f"Total scheduled: {total_scheduled}")
+    total_remaining = total - total_scheduled
+    print(f"Remaining: {total_remaining}")
+    pomodoro_size = datetime.timedelta(minutes=30)
+    print(f"Number of pomodoros: {total_remaining / pomodoro_size}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get time info.')
