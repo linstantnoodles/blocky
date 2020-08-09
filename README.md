@@ -65,7 +65,6 @@ If you try to schedule it in the past, you'll get a warning unless you provide t
 
 To make it recurring, specify `-r` and check off the days you want the event to repeat.
 
-```
 If you're unsure how long something will take, but you want blocky to capture it (when you're done), start a stop watch event: 
 ```
 block events -a "new stop watch event" -sw
