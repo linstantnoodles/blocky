@@ -2,24 +2,28 @@ import argparse
 import gcal
 import datetime
 import pytz
+import sys
 
-def schedule(events,from_datetime,to_datetime):
-    print("Date: 8/29")
-    print(from_datetime)
-    print(to_datetime)
+
+def print_schedule(events,from_datetime,to_datetime):
     events = [e for e in events if e["from"] >= from_datetime and e["to"] <= to_datetime]
-    #for event in events:
-    #    print(f'{event["name"]}: {event["from"]} - {event["to"]}')
+    for event in events:
+        print(f'{event["name"]}: {event["from"]} - {event["to"]}')
     return events
 
 def events_from_google():
-    return [
+    event_filters = [
+        "Eng Hold: Cut production branch",
+        "[Optional] Daily Dose of Team Time (DDOTT)"
+    ]
+    mapped_events = [
         {
             "name": event["summary"],
             "from": datetime.datetime.fromisoformat(event["start"]["dateTime"]),
             "to": datetime.datetime.fromisoformat(event["end"]["dateTime"])
         } for event in gcal.all_events()
     ]
+    return [e for e in mapped_events if e["name"] not in event_filters]
 
 def today_full_range():
     today = datetime.datetime.today()
@@ -46,11 +50,32 @@ def hours_remaining(range_start, range_end, events, unscheduled_blocks=[]):
     pomodoro_size = datetime.timedelta(minutes=30)
     print(f"Number of pomodoros: {total_remaining / pomodoro_size}")
 
+def add_event():
+    pass
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get time info.')
+    subparsers = parser.add_subparsers(help='commands')
+
+    event_parser = subparsers.add_parser('events', help='List contents')
+    event_parser.add_argument('-l', '--ls', action='store_true', help='List events')
+    event_parser.add_argument('-n', '--new', action='store', help='New Event')
+    event_parser.add_argument('-t', '--type', action='store', help='Event Type')
+
+
     parser.add_argument('-r', '--range', help="time range. i.e: today, week", dest='range')
+
     args = parser.parse_args()
-    print(args.range)
+
+    if args.new:
+        if args.type:
+            print("wohoo")
+
+    if args.ls:
+        # Defaults to today
+        start, end = today_remaining_range()
+        print_schedule(events_from_google(), start, end)
+        sys.exit(0)
 
     events = [
         {
@@ -74,5 +99,5 @@ if __name__ == "__main__":
     # events.extend(gevents)
 
     start, end = today_remaining_range()
-    scheduled_events = schedule(events, start, end)
+    scheduled_events = print_schedule(events, start, end)
     hours_remaining(start, end, scheduled_events)

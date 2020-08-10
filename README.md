@@ -153,3 +153,4 @@ Goals:
 * Numerous third party integrations (sublime, vim, chrome). It' all opt-in. Blocky only logs what you want it to log.
 * Flexible reporting
 
+
