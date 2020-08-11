@@ -2,4 +2,5 @@ env
 *.pickle
 *-credentials.json
 __pycache__
+local-events.json
 
