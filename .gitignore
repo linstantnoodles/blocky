@@ -3,4 +3,5 @@ env
 *-credentials.json
 __pycache__
 local-events.json
+englogs/
 

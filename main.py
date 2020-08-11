@@ -2,6 +2,7 @@ import argparse
 import gcal
 import datetime
 import pytz
+import os
 import sys
 import json
 
@@ -92,7 +93,11 @@ def hours_remaining(range_start, range_end, events, unscheduled_blocks=[]):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get time info.')
-    subparsers = parser.add_subparsers(help='commands')
+    subparsers = parser.add_subparsers(help='commands', dest="subparser_name")
+
+    englog_parser = subparsers.add_parser('elog', help="Engineering log") 
+    englog_parser.add_argument('-n', '--new', action='store_true', help='New Log')
+    englog_parser.add_argument('-o', '--open', action='store_true', help='New Log')
 
     event_parser = subparsers.add_parser('events', help='List contents')
     event_parser.add_argument('-l', '--ls', action='store_true', help='List events')
@@ -103,6 +108,21 @@ if __name__ == "__main__":
     event_parser.add_argument('-t', '--type', action='store', help='Event Type')
     parser.add_argument('-r', '--range', help="time range. i.e: today, week", dest='range')
     args = parser.parse_args()
+
+    if args.subparser_name == "elog":
+        if args.new: 
+            now = datetime.datetime.now(pytz.timezone('America/New_York'))
+            file_name = f"englogs/{now.strftime('%Y-%m-%d')}.md"
+            if os.path.exists(file_name):
+                print("File already exists! Use open.")
+                sys.exit()
+            with open(f"{file_name}", "w") as f:
+                f.write("top 3:\n*\n*\n*\npostnotes:\n")
+        if args.open:
+            now = datetime.datetime.now(pytz.timezone('America/New_York'))
+            file_name = f"englogs/{now.strftime('%Y-%m-%d')}.md"
+            os.system(f"vim {file_name}")
+        sys.exit()
 
     if args.new:
         if args.type == "sw":
