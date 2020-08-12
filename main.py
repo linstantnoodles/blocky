@@ -23,10 +23,12 @@ def print_schedule(events,from_datetime,to_datetime):
     worktime_info = worktimes()
     workday_hours_abs = diff_times(worktime_info["from"], worktime_info["to"])
     print(f'{workday_hours_abs.total_seconds() / 3600} hr workday from {worktime_info["from"].strftime("%I:%M%p")} to {worktime_info["to"].strftime("%I:%M%p")}')
-    datetime_now = datetime.datetime.now(pytz.timezone('America/New_York'))
-    from_time = max(datetime.datetime.now(pytz.timezone('America/New_York')).time(), worktime_info["from"])
+    timez = pytz.timezone('America/New_York')
+    datetime_now = timez.localize(datetime.datetime.now())
+    from_time = max(datetime_now.time(), worktime_info["from"])
     total_work_time = diff_times(from_time, worktime_info["to"])
     available_time = total_work_time - td_seconds
+    # bug, what if you're already in your lunch break!
     print(f'Available Hours: {available_time.total_seconds() / 3600}')
     if (datetime_now.time() < worktime_info["from"]):
         print(f'Hours Until Work: {diff_times(datetime_now.time(), worktime_info["from"]).total_seconds() / 3600}')
@@ -71,13 +73,15 @@ def time_range(context):
         eastern = pytz.timezone('America/New_York')
         worktime_info = worktimes()
         today = datetime.datetime.today()
-        from_time = datetime.datetime(
+        datetime_now = eastern.localize(datetime.datetime.now())
+        from_time = eastern.localize(datetime.datetime(
             today.year,
             today.month,
             today.day,
             worktime_info["from"].hour,
             worktime_info["from"].minute
-        )
+        ))
+        from_time = max(datetime_now, from_time)
         to = datetime.datetime(
             today.year,
             today.month,
@@ -85,7 +89,7 @@ def time_range(context):
             worktime_info["to"].hour,
             worktime_info["to"].minute
         )
-        return (eastern.localize(from_time), eastern.localize(to))
+        return (from_time, eastern.localize(to))
     else:
         return today_remaining_range()
 
@@ -186,11 +190,12 @@ if __name__ == "__main__":
                     print(f'{index} - {event["name"]}: {event["from"]} - {event["to"]}')
         else:
             today = datetime.datetime.today()
+            tz = pytz.timezone('America/New_York')
             recurring_local_events = [
                 {
                     "name": "Lunch",
-                    "from": datetime.datetime(today.year, today.month, today.day, 12, tzinfo=pytz.timezone('America/New_York')),
-                    "to": datetime.datetime(today.year, today.month, today.day, 13, tzinfo=pytz.timezone('America/New_York')),
+                    "from": tz.localize(datetime.datetime(today.year, today.month, today.day, 12)),
+                    "to": tz.localize(datetime.datetime(today.year, today.month, today.day, 13)),
                 }
             ]
             start, end = time_range(args.context)
