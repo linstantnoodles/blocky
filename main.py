@@ -38,8 +38,8 @@ def sum_time_ranges(events):
 
 def worktimes():
     return {
-        "from": datetime.time(hour=10),
-        "to": datetime.time(hour=17)
+        "from": datetime.time(hour=10, minute=0),
+        "to": datetime.time(hour=17, minute=0)
     }
 
 def bar_chart(from_dt, to_dt, events):
@@ -65,6 +65,29 @@ def events_from_google():
         } for event in gcal.all_events()
     ]
     return [e for e in mapped_events if e["name"] not in event_filters]
+
+def time_range(context):
+    if context == "work":
+        eastern = pytz.timezone('America/New_York')
+        worktime_info = worktimes()
+        today = datetime.datetime.today()
+        from_time = datetime.datetime(
+            today.year,
+            today.month,
+            today.day,
+            worktime_info["from"].hour,
+            worktime_info["from"].minute
+        )
+        to = datetime.datetime(
+            today.year,
+            today.month,
+            today.day,
+            worktime_info["to"].hour,
+            worktime_info["to"].minute
+        )
+        return (eastern.localize(from_time), eastern.localize(to))
+    else:
+        return today_remaining_range()
 
 def today_full_range():
     today = datetime.datetime.today()
@@ -95,7 +118,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Get time info.')
     subparsers = parser.add_subparsers(help='commands', dest="subparser_name")
 
-    englog_parser = subparsers.add_parser('elog', help="Engineering log") 
+    englog_parser = subparsers.add_parser('elog', help="Engineering log")
     englog_parser.add_argument('-n', '--new', action='store_true', help='New Log')
     englog_parser.add_argument('-o', '--open', action='store_true', help='New Log')
 
@@ -107,10 +130,11 @@ if __name__ == "__main__":
     event_parser.add_argument('-e', '--end', action='store', type=int, help='End Event')
     event_parser.add_argument('-t', '--type', action='store', help='Event Type')
     parser.add_argument('-r', '--range', help="time range. i.e: today, week", dest='range')
+    event_parser.add_argument('context', help="Context. i.e work, all")
     args = parser.parse_args()
 
     if args.subparser_name == "elog":
-        if args.new: 
+        if args.new:
             now = datetime.datetime.now(pytz.timezone('America/New_York'))
             file_name = f"englogs/{now.strftime('%Y-%m-%d')}.md"
             if os.path.exists(file_name):
@@ -169,7 +193,7 @@ if __name__ == "__main__":
                     "to": datetime.datetime(today.year, today.month, today.day, 13, tzinfo=pytz.timezone('America/New_York')),
                 }
             ]
-            start, end = today_remaining_range()
+            start, end = time_range(args.context)
             all_events = recurring_local_events + events_from_google()
             all_events = sorted(all_events, key=lambda x: x["from"])
             print_schedule(all_events, start, end)
